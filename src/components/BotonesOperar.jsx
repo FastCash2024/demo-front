@@ -26,9 +26,14 @@ export default function BotonesOperar({ caso }) {
   
   const generarLiga = async () => {
     try {
-      const formatoPago = `¡Hola ${caso.cliente}! 👋\n\nTu factura ${caso.idSebFactura} presenta un saldo adeudado de $${caso.adeudado} MXN.\n\nPuedes regularizar tu pago en el siguiente enlace:\nhttps://pagos.dineropresta.com/pay/${caso.idSebFactura}`;
+      // Usar subdominio/origen actual para poder funcionar en el mismo ambiente
+      const origen = window.location.origin; 
+      const identificadorPago = caso._id || caso.numeroDePrestamo || caso.idSebFactura || 'sin-id';
+      const linkCobro = `${origen}/pago/${identificadorPago}`;
+
+      const formatoPago = `${linkCobro}`;
       await navigator.clipboard.writeText(formatoPago);
-      alert(`✅ ¡Liga copiada para ${caso.cliente}!`);
+      alert(`✅ ¡Liga copiada para ${caso.cliente}!\n${linkCobro}`);
     } catch (err) {
       alert('❌ Error al copiar la liga.');
     }

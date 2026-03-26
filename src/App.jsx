@@ -4,7 +4,8 @@ import Dashboard from './Dashboard';
 
 // 👇 1. Importamos la nueva pantalla del Perfil del Cliente
 // (Nota: Si guardaste PerfilCliente en la carpeta 'views', cambia 'components' por 'views')
-import PerfilCliente from './components/PerfilCliente'; 
+import PerfilCliente from './components/PerfilCliente';
+import Pago from './views/Pago';
 
 function App() {
   return (
@@ -18,6 +19,8 @@ function App() {
 
         {/* 👇 2. Registramos la nueva ruta para que funcione al abrir la pestaña nueva */}
         <Route path="/perfil-cliente" element={<PerfilCliente />} />
+        <Route path="/perfil-cliente/:id" element={<PerfilCliente />} />
+        <Route path="/pago/:id" element={<Pago />} />
         <Route path="/perfil-cliente/:id" element={<PerfilCliente />} />
       </Routes>
     </BrowserRouter>

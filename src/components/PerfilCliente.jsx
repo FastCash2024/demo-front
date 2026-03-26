@@ -161,7 +161,7 @@ export default function PerfilCliente() {
         <div style={{ maxWidth: '600px' }}>
           <h2>Hubo un problema al cargar el perfil</h2>
           <p style={{ color: theme.textMuted, margin: '12px 0' }}>{caso.error}</p>
-          <p style={{ color: theme.textMuted, fontSize: '14px' }}>Asegúrate de ir desde la tabla con la selección correcta o añade `?id=<loanId>` a la URL.</p>
+          <p style={{ color: theme.textMuted, fontSize: '14px' }}>Asegúrate de ir desde la tabla con la selección correcta o añade <code>?id=&lt;loanId&gt;</code> a la URL.</p>
         </div>
       </div>
     );
