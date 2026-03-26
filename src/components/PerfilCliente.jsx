@@ -84,7 +84,8 @@ export default function PerfilCliente() {
         });
 
         if (response.ok) {
-          const prestamoCompleto = await response.json();
+          const data = await response.json();
+          const prestamoCompleto = data.prestamo; // ← CORRECCIÓN: Leer del wrapper { prestamo: ... }
           const casoMapeado = mapearDatosDelPrestamo(prestamoCompleto);
           setCaso(casoMapeado);
           return;
