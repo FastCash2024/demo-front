@@ -49,7 +49,7 @@ export default function PerfilCliente() {
         }
 
         // Reemplaza la URL del backend si es diferente en producción
-        const response = await fetch(`http://localhost:3000/api/loans/${loanId}`, {
+        const response = await fetch(`https://ms4.fastcash-mx.com/api/loans/${loanId}`, {
           headers: { 'Content-Type': 'application/json' }
         });
 

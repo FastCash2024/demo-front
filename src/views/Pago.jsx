@@ -14,7 +14,7 @@ export default function Pago() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`http://localhost:3000/api/loans/${id}`);
+        const response = await fetch(`https://ms4.fastcash-mx.com/api/loans/${id}`);
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || `Error ${response.status}`);

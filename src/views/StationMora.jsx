@@ -16,7 +16,7 @@ export default function StationMora() {
       setCargando(true);
       const token = localStorage.getItem('crmToken');
 
-      const respuesta = await axios.get('http://localhost:3000/api/prestamos', {
+      const respuesta = await axios.get('https://ms4.fastcash-mx.com/api/prestamos', {
         headers: {
           Authorization: `Bearer ${token}`
         }
