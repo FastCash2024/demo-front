@@ -57,19 +57,16 @@ export default function PerfilCliente() {
     const cargarDatos = async () => {
       try {
         const datosGuardados = localStorage.getItem('clienteEnDetalle');
-        if (datosGuardados) {
-          const prestamoLocal = JSON.parse(datosGuardados);
-          // Mapear datos del Prestamo al formato esperado por PerfilCliente
-          const casoMapeado = mapearDatosDelPrestamo(prestamoLocal);
-          setCaso(casoMapeado);
-          return;
-        }
+        const prestamoLocal = datosGuardados ? JSON.parse(datosGuardados) : null;
 
-        // Si no hay cliente en localStorage, usar id en route param o query string
+        // Prioridad de loanId: route param, query string, localStorage
         let loanId = id || null;
         if (!loanId) {
           const params = new URLSearchParams(window.location.search);
           loanId = params.get('id');
+        }
+        if (!loanId && prestamoLocal) {
+          loanId = prestamoLocal._id || prestamoLocal.id || null;
         }
 
         if (!loanId) {
@@ -77,23 +74,29 @@ export default function PerfilCliente() {
           return;
         }
 
-        // Obtener token del localStorage
+        // Antes de usar localStorage, traemos el dato completo de backend
         const token = localStorage.getItem('authToken');
-        
-        // Nueva URL: Consumir endpoint backend local para datos completos del Prestamo
         const response = await fetch(`http://localhost:3000/api/prestamos/detalle/${loanId}`, {
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
           }
         });
 
-        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+        if (response.ok) {
+          const prestamoCompleto = await response.json();
+          const casoMapeado = mapearDatosDelPrestamo(prestamoCompleto);
+          setCaso(casoMapeado);
+          return;
+        }
 
-        const prestamoCompleto = await response.json();
-        // Mapear estructura del Prestamo al formato que PerfilCliente espera
-        const casoMapeado = mapearDatosDelPrestamo(prestamoCompleto);
-        setCaso(casoMapeado);
+        // Si la API falla, fallback a localStorage (minimos datos)
+        if (prestamoLocal) {
+          setCaso(mapearDatosDelPrestamo(prestamoLocal));
+          return;
+        }
+
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
       } catch (error) {
         console.error('Error cargando cliente en PerfilCliente:', error);
         setCaso({ error: error.message || 'Error inesperado al cargar perfil' });
@@ -101,7 +104,7 @@ export default function PerfilCliente() {
     };
 
     cargarDatos();
-  }, []);
+  }, [id]);
 
   // TEMA INDEPENDIENTE
   const theme = isDarkMode ? {
