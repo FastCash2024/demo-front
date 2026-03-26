@@ -8,6 +8,32 @@ import {
   Landmark, Calendar, CalendarCheck, Settings, Search
 } from 'lucide-react';
 
+// Función para mapear datos del Prestamo completo al formato que PerfilCliente espera
+const mapearDatosDelPrestamo = (prestamo) => {
+  if (!prestamo) return {};
+  
+  return {
+    _id: prestamo._id,
+    cliente: prestamo.solicitud?.cliente?.nombreDelCliente || 'Sin nombre',
+    idSebFactura: prestamo.numeroDePrestamo || 'N/A',
+    adeudado: (prestamo.solicitud?.montos?.valorAdeudadoCentavos || 0) / 100, // Convertir centavos a pesos
+    telefono: prestamo.solicitud?.cliente?.numeroDeTelefonoMovil || 'N/A',
+    email: prestamo.solicitud?.cliente?.email || 'N/A',
+    curp: prestamo.solicitud?.cliente?.curp || 'N/A',
+    rfc: prestamo.solicitud?.cliente?.rfc || 'N/A',
+    urlCurpFrontal: prestamo.solicitud?.cliente?.urlCurpFrontal || null,
+    urlCurpReverso: prestamo.solicitud?.cliente?.urlCurpReverso || null,
+    urlSelfie: prestamo.solicitud?.cliente?.urlSelfie || null,
+    dispositivo: prestamo.solicitud?.dispositivo || {},
+    montos: prestamo.solicitud?.montos || {},
+    fechas: prestamo.cicloDeVida?.fechas || {},
+    acotaciones: prestamo.operacion?.acotaciones || [],
+    estadoDeCredito: prestamo.cicloDeVida?.estadoDeCredito || 'N/A',
+    estadoDeComunicacion: prestamo.operacion?.cobranza?.estadoDeComunicacion || 'N/A',
+    prestamoCompleto: prestamo // Guardar el objeto completo para acceso posterior
+  };
+};
+
 export default function PerfilCliente() {
   const { id } = useParams();
   const [caso, setCaso] = useState(null);
@@ -32,7 +58,10 @@ export default function PerfilCliente() {
       try {
         const datosGuardados = localStorage.getItem('clienteEnDetalle');
         if (datosGuardados) {
-          setCaso(JSON.parse(datosGuardados));
+          const prestamoLocal = JSON.parse(datosGuardados);
+          // Mapear datos del Prestamo al formato esperado por PerfilCliente
+          const casoMapeado = mapearDatosDelPrestamo(prestamoLocal);
+          setCaso(casoMapeado);
           return;
         }
 
@@ -48,15 +77,23 @@ export default function PerfilCliente() {
           return;
         }
 
-        // Reemplaza la URL del backend si es diferente en producción
-        const response = await fetch(`https://ms4.fastcash-mx.com/api/loans/${loanId}`, {
-          headers: { 'Content-Type': 'application/json' }
+        // Obtener token del localStorage
+        const token = localStorage.getItem('authToken');
+        
+        // Nueva URL: Consumir endpoint backend local para datos completos del Prestamo
+        const response = await fetch(`http://localhost:3000/api/prestamos/detalle/${loanId}`, {
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
         });
 
         if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
 
-        const data = await response.json();
-        setCaso(data);
+        const prestamoCompleto = await response.json();
+        // Mapear estructura del Prestamo al formato que PerfilCliente espera
+        const casoMapeado = mapearDatosDelPrestamo(prestamoCompleto);
+        setCaso(casoMapeado);
       } catch (error) {
         console.error('Error cargando cliente en PerfilCliente:', error);
         setCaso({ error: error.message || 'Error inesperado al cargar perfil' });
@@ -241,18 +278,19 @@ export default function PerfilCliente() {
                 </div>
                 <div style={{ display: 'flex', gap: '25px', flex: 1 }}>
                   <div style={{ flex: 1.5, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', alignContent: 'start' }}>
-                    <div style={{ display: 'flex', gap: '10px' }}><Smartphone size={18} color={theme.accentPurple} style={{marginTop:'2px', flexShrink:0}}/><div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Marca</span><strong style={{ fontSize: '14px' }}>Samsung Galaxy S21 FE</strong></div></div>
-                    <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Modelo</span><strong style={{ fontSize: '14px' }}>SM-G990B</strong></div>
+                    <div style={{ display: 'flex', gap: '10px' }}><Smartphone size={18} color={theme.accentPurple} style={{marginTop:'2px', flexShrink:0}}/><div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Marca</span><strong style={{ fontSize: '14px' }}>{caso.dispositivo?.marca || 'N/A'}</strong></div></div>
+                    <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Modelo</span><strong style={{ fontSize: '14px' }}>{caso.dispositivo?.modelo || 'N/A'}</strong></div>
                     <div style={{ display: 'flex', gap: '10px', gridColumn: 'span 2' }}>
                       <ShieldCheck size={18} color={theme.textMuted} style={{marginTop:'2px', flexShrink:0}}/>
                       <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Dispositivo Real Check <CheckCircle size={12} color={theme.accentGreen} style={{display:'inline'}}/></span><span style={{ fontSize: '12px', color: theme.textMuted, display: 'block', marginTop: '2px' }}>Firma de hardware única verificada.</span></div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}><Lock size={18} color={theme.textMuted} style={{marginTop:'2px', flexShrink:0}}/><div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Status</span><strong style={{ fontSize: '14px' }}>Verificado</strong></div></div>
-                    <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>Lista Negra</span><strong style={{ fontSize: '14px', color: theme.accentGreen, display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14}/> Limpio</strong></div>
+                    <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block' }}>¿Emulador?</span><strong style={{ fontSize: '14px', color: caso.dispositivo?.esEmulador ? '#ef4444' : theme.accentGreen, display: 'flex', alignItems: 'center', gap: '4px' }}><CheckCircle size={14}/> {caso.dispositivo?.esEmulador ? 'Sí (Riesgo)' : 'No (Limpio)'}</strong></div>
                   </div>
                   <div style={{ flex: 1, backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px dashed ${theme.border}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px', textAlign: 'center' }}>
                     <Map size={36} color={theme.accentGreen} style={{ marginBottom: '15px' }} />
-                    <span style={{ fontSize: '12px', color: theme.textMuted }}>Ubicado por IP y datos celulares.</span>
+                    <span style={{ fontSize: '12px', color: theme.textMuted }}>ID: {caso.dispositivo?.dispositivoId?.slice(0, 12) || 'N/A'}...</span>
+                    <span style={{ fontSize: '12px', color: theme.textMuted, marginTop: '10px' }}>App: {caso.dispositivo?.idApp?.slice(0, 15) || 'N/A'}...</span>
                     <strong style={{ fontSize: '13px', color: theme.accentGreen, marginTop: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14} /> Conexión Segura</strong>
                   </div>
                 </div>
@@ -268,23 +306,31 @@ export default function PerfilCliente() {
                   <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
                     <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'block', marginBottom: '4px' }}>Nombres Completos</span><strong style={{ fontSize: '18px' }}>{caso.cliente}</strong></div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', backgroundColor: theme.bgDarker, padding: '15px', borderRadius: '8px', border: `1px solid ${theme.border}` }}>
-                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><CreditCard size={14}/> ID Número</span><strong style={{ fontSize: '14px' }}>123345887856</strong></div>
+                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><CreditCard size={14}/> CURP</span><strong style={{ fontSize: '14px' }}>{caso.curp || 'N/A'}</strong></div>
                       <div style={{ display: 'flex', alignItems: 'center' }}><span style={{ color: theme.accentGreen, fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14}/> Validado</span></div>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><GraduationCap size={14}/> Académico</span><strong style={{ fontSize: '14px' }}>Licenciatura</strong></div>
-                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><Briefcase size={14}/> Salario Mensual</span><strong style={{ fontSize: '14px' }}>$15,000 MXN</strong></div>
+                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><GraduationCap size={14}/> RFC</span><strong style={{ fontSize: '14px' }}>{caso.rfc || 'N/A'}</strong></div>
+                      <div><span style={{ color: theme.textMuted, fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}><MessageSquare size={14}/> Email</span><strong style={{ fontSize: '14px', wordBreak: 'break-all' }}>{caso.email || 'N/A'}</strong></div>
                     </div>
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ color: theme.textMain, fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '12px' }}>Documentos KYC (Check)</span>
+                    <span style={{ color: theme.textMain, fontSize: '13px', fontWeight: 'bold', display: 'block', marginBottom: '12px' }}>Documentos Verificados</span>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', flex: 1 }}>
-                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FileText size={24} color={theme.textMuted}/></div>
-                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={24} color={theme.textMuted}/></div>
-                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><FileText size={24} color={theme.textMuted}/></div>
                       <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-                        <User size={24} color={theme.textMuted}/>
-                        <CheckCircle size={16} color={theme.accentGreen} style={{ position: 'absolute', bottom: '8px', right: '8px', background: theme.bgCard, borderRadius: '50%' }}/>
+                        {caso.urlCurpFrontal ? <CheckCircle size={24} color={theme.accentGreen}/> : <FileText size={24} color={theme.textMuted}/>}
+                        {caso.urlCurpFrontal && <CheckCircle size={16} color={theme.accentGreen} style={{ position: 'absolute', bottom: '8px', right: '8px', background: theme.bgCard, borderRadius: '50%' }}/>}
+                      </div>
+                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                        {caso.urlCurpReverso ? <CheckCircle size={24} color={theme.accentGreen}/> : <Camera size={24} color={theme.textMuted}/>}
+                        {caso.urlCurpReverso && <CheckCircle size={16} color={theme.accentGreen} style={{ position: 'absolute', bottom: '8px', right: '8px', background: theme.bgCard, borderRadius: '50%' }}/>}
+                      </div>
+                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                        <FileText size={24} color={theme.textMuted}/>
+                      </div>
+                      <div style={{ backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                        {caso.urlSelfie ? <CheckCircle size={24} color={theme.accentGreen}/> : <User size={24} color={theme.textMuted}/>}
+                        {caso.urlSelfie && <CheckCircle size={16} color={theme.accentGreen} style={{ position: 'absolute', bottom: '8px', right: '8px', background: theme.bgCard, borderRadius: '50%' }}/>}
                       </div>
                     </div>
                   </div>
@@ -298,11 +344,25 @@ export default function PerfilCliente() {
                   <button style={{ backgroundColor: 'transparent', color: theme.textMain, border: `1px solid ${theme.border}`, padding: '8px 16px', borderRadius: '6px', fontSize: '13px', cursor: 'pointer', fontWeight: 'bold' }}>Generar Link Seguro</button>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', flex: 1 }}>
-                  {[ {title: 'ID Frontal', icon: <User size={48} color={theme.textMuted} />}, {title: 'ID Trasero', icon: <FileText size={48} color={theme.textMuted} />}, {title: 'Selfie Liveness', icon: <Camera size={48} color={theme.textMuted} />} ].map((foto, i) => (
+                  {[ 
+                    {title: 'CURP Frontal', url: caso.urlCurpFrontal, icon: <User size={48} color={theme.textMuted} />}, 
+                    {title: 'CURP Reverso', url: caso.urlCurpReverso, icon: <FileText size={48} color={theme.textMuted} />}, 
+                    {title: 'Selfie', url: caso.urlSelfie, icon: <Camera size={48} color={theme.textMuted} />} 
+                  ].map((foto, i) => (
                     <div key={i} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                      <div style={{ flex: 1, backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '140px' }}>
-                        {foto.icon}
-                        <div style={{ position: 'absolute', bottom: '-10px', right: '-10px', backgroundColor: theme.accentGreen, color: 'white', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `3px solid ${theme.bgCard}`, fontSize: '14px' }}>✓</div>
+                      <div style={{ flex: 1, backgroundColor: theme.bgDarker, borderRadius: '8px', border: `1px solid ${theme.border}`, display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative', minHeight: '140px', overflow: 'hidden' }}>
+                        {foto.url ? (
+                          <img 
+                            src={foto.url} 
+                            alt={foto.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          foto.icon
+                        )}
+                        {foto.url && (
+                          <div style={{ position: 'absolute', bottom: '-10px', right: '-10px', backgroundColor: theme.accentGreen, color: 'white', borderRadius: '50%', width: '26px', height: '26px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `3px solid ${theme.bgCard}`, fontSize: '14px' }}>✓</div>
+                        )}
                       </div>
                       <span style={{ fontSize: '14px', display: 'block', marginTop: '15px', fontWeight: 'bold', textAlign: 'center' }}>{foto.title}</span>
                     </div>
@@ -320,9 +380,23 @@ export default function PerfilCliente() {
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '30px', flex: 1 }}>
-                  <div style={{ flex: 1, borderRight: `1px solid ${theme.border}`, paddingRight: '20px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto' }}>
-                    <div style={{ display: 'flex', gap: '12px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: theme.accentGreen, marginTop: '5px', flexShrink: 0 }}></div><div><span style={{ fontSize: '14px', display: 'block', fontWeight: 'bold', marginBottom:'2px' }}>Sistema Automatizado</span><span style={{ fontSize: '12px', color: theme.textMuted }}>SMS Enviado - 12:28 AM</span></div></div>
-                    <div style={{ display: 'flex', gap: '12px' }}><div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: theme.accentPurple, marginTop: '5px', flexShrink: 0 }}></div><div><span style={{ fontSize: '14px', display: 'block', fontWeight: 'bold', marginBottom:'2px' }}>Promesa de Pago</span><span style={{ fontSize: '12px', color: theme.textMuted }}>Agente: Carlos - 10:20 AM</span></div></div>
+                  <div style={{ flex: 1, borderRight: `1px solid ${theme.border}`, paddingRight: '20px', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', maxHeight: '250px' }}>
+                    {caso.acotaciones && caso.acotaciones.length > 0 ? (
+                      caso.acotaciones.slice(0, 5).map((acotacion, i) => (
+                        <div key={i} style={{ display: 'flex', gap: '12px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: acotacion.tipo === 'verificacion' ? '#f59e0b' : acotacion.tipo === 'cobranza' ? theme.accentPurple : theme.accentGreen, marginTop: '5px', flexShrink: 0 }}></div>
+                          <div>
+                            <span style={{ fontSize: '14px', display: 'block', fontWeight: 'bold', marginBottom:'2px', textTransform: 'capitalize' }}>{acotacion.tipo}</span>
+                            <span style={{ fontSize: '12px', color: theme.textMuted }}>Por: {acotacion.asesor || 'Sistema'}</span>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: theme.accentGreen, marginTop: '5px', flexShrink: 0 }}></div>
+                        <div><span style={{ fontSize: '14px', display: 'block', fontWeight: 'bold', marginBottom:'2px' }}>Sistema Automatizado</span><span style={{ fontSize: '12px', color: theme.textMuted }}>Sin acotaciones registradas</span></div>
+                      </div>
+                    )}
                   </div>
                   <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', borderBottom: `1px solid ${theme.border}`, paddingBottom: '10px' }}>
@@ -354,8 +428,8 @@ export default function PerfilCliente() {
                     <tr>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Préstamo</th>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Cuenta Aprobadora</th>
-                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Registro Histórico</th>
-                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Tipo Pago</th>
+                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Dispersado</th>
+                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Adeudado</th>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Estado</th>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'bold' }}>Operativa</th>
                     </tr>
@@ -364,17 +438,9 @@ export default function PerfilCliente() {
                     <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
                       <td style={{ padding: '12px', color: theme.textMuted }}>{caso.idSebFactura}</td>
                       <td style={{ padding: '12px' }}>{renderBadge('Dineropresta_SPEI', 'success')}</td>
-                      <td style={{ padding: '12px' }}>{renderBadge('Pagado', 'success')}</td>
-                      <td style={{ padding: '12px', color: theme.textMain }}>Abono de Capital</td>
-                      <td style={{ padding: '12px' }}>{renderBadge('Válido', 'success')}</td>
-                      <td style={{ padding: '12px', color: theme.textMain }}>Dineropresta</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '12px', color: theme.textMuted }}>{caso.idSebFactura}</td>
-                      <td style={{ padding: '12px' }}>{renderBadge('Pendiente', 'warning')}</td>
-                      <td style={{ padding: '12px' }}>{renderBadge('Pendiente', 'danger')}</td>
-                      <td style={{ padding: '12px', color: theme.textMain }}>Abono de Mora</td>
-                      <td style={{ padding: '12px' }}>{renderBadge('En Proceso', 'danger')}</td>
+                      <td style={{ padding: '12px', color: theme.textMain }}>${(caso.montos?.valorDispersadoCentavos || 0) / 100}</td>
+                      <td style={{ padding: '12px', color: theme.textMain }}>${caso.adeudado?.toFixed(2) || '0.00'}</td>
+                      <td style={{ padding: '12px' }}>{renderBadge(caso.estadoDeCredito || 'Activo', 'success')}</td>
                       <td style={{ padding: '12px', color: theme.textMain }}>Dineropresta</td>
                     </tr>
                   </tbody>
@@ -388,21 +454,21 @@ export default function PerfilCliente() {
                   <thead style={{ backgroundColor: theme.bgDarker, borderBottom: `1px solid ${theme.border}` }}>
                     <tr>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Tipo de Cuenta</th>
-                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Número de tarjeta</th>
-                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Código de Operación</th>
+                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Número de Cuenta</th>
+                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Estado</th>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Entidad Bancaria</th>
                       <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Fecha de Solicitud</th>
-                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Fecha de desembolso</th>
+                      <th style={{ padding: '14px', color: theme.textMain, fontWeight: 'normal' }}>Fecha de Desembolso</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ padding: '16px', color: theme.textMain }}>Cuenta de Cheques</td>
-                      <td style={{ padding: '16px', color: theme.textMain, letterSpacing: '1px' }}>**** **** **** 1234</td>
-                      <td style={{ padding: '16px', color: theme.textMain }}>1028374659</td>
-                      <td style={{ padding: '16px', color: theme.textMain }}>Banco Azteca (México)</td>
-                      <td style={{ padding: '16px', color: theme.textMain }}>2028-03-24</td>
-                      <td style={{ padding: '16px', color: theme.textMain }}>2026-03-25</td>
+                      <td style={{ padding: '16px', color: theme.textMain }}>{caso.prestamoCompleto?.solicitud?.cuentaBancariaSnapshot?.tipoCuenta || 'Cuenta de Cheques'}</td>
+                      <td style={{ padding: '16px', color: theme.textMain, letterSpacing: '1px' }}>**** **** **** {caso.prestamoCompleto?.solicitud?.cuentaBancariaSnapshot?.numeroDeCuenta?.slice(-4) || '****'}</td>
+                      <td style={{ padding: '16px', color: theme.textMain }}>{caso.prestamoCompleto?.solicitud?.cuentaBancariaSnapshot?.estadoDeCuenta || 'Activo'}</td>
+                      <td style={{ padding: '16px', color: theme.textMain }}>{caso.prestamoCompleto?.solicitud?.cuentaBancariaSnapshot?.nombreBanco || 'Banco'}</td>
+                      <td style={{ padding: '16px', color: theme.textMain }}>{caso.fechas?.fechaDeDispersion ? new Date(caso.fechas.fechaDeDispersion).toLocaleDateString() : 'N/A'}</td>
+                      <td style={{ padding: '16px', color: theme.textMain }}>{caso.fechas?.fechaDeReembolso ? new Date(caso.fechas.fechaDeReembolso).toLocaleDateString() : 'N/A'}</td>
                     </tr>
                   </tbody>
                 </table>
