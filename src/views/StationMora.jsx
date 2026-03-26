@@ -94,28 +94,38 @@ export default function StationMora() {
           <div style={{ padding: '15px', backgroundColor: '#fee2e2', color: '#b91c1c', textAlign: 'center' }}>{errorSistema}</div>
         )}
 
-        <div className="table-scroll-wrapper">
+        <div className="table-scroll-wrapper" style={{ overflowX: 'auto' }}>
           <table className="tabla-dark-excel">
             <thead>
               <tr>
-                <th>CONTACTOS</th>
-                <th>CLIENTE</th>
-                <th>TELÉFONO</th>
-                <th>VALOR ADEUDADO (MXN)</th>
-                <th>FECHA LÍMITE</th>
-                <th>DÍAS MORA</th>
-                <th>ESTADO</th>
-                <th>OPERAR</th>
+                <th style={{ minWidth: '50px' }}>Seleccionar</th>
+                <th style={{ minWidth: '80px' }}>Contactos</th>
+                <th style={{ minWidth: '130px' }}>Nº Préstamo</th>
+                <th style={{ minWidth: '100px' }}>ID Subfactura</th>
+                <th style={{ minWidth: '130px' }}>Estado Crédito</th>
+                <th style={{ minWidth: '150px' }}>Nombre Cliente</th>
+                <th style={{ minWidth: '130px' }}>Tel. Móvil</th>
+                <th style={{ minWidth: '90px' }}>Cliente Nuevo</th>
+                <th style={{ minWidth: '130px' }}>Dispersado (MXN)</th>
+                <th style={{ minWidth: '130px' }}>Adeudado (MXN)</th>
+                <th style={{ minWidth: '120px' }}>Extensión (MXN)</th>
+                <th style={{ minWidth: '130px' }}>Reembolsado (MXN)</th>
+                <th style={{ minWidth: '120px' }}>Producto</th>
+                <th style={{ minWidth: '90px' }}>Días Vencidos</th>
+                <th style={{ minWidth: '100px' }}>Fecha Dispersión</th>
+                <th style={{ minWidth: '100px' }}>Fecha Cobro (D0)</th>
+                <th style={{ minWidth: '100px' }}>Fecha Reembolso</th>
+                <th style={{ minWidth: '150px' }}>Clave STP</th>
+                <th style={{ minWidth: '100px' }}>Operar</th>
               </tr>
             </thead>
             <tbody>
               {cargando ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>⏳ Cargando base de datos...</td></tr>
+                <tr><td colSpan="19" style={{ textAlign: 'center', padding: '20px' }}>⏳ Cargando base de datos...</td></tr>
               ) : casosActuales.length === 0 ? (
-                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No se encontraron préstamos registrados.</td></tr>
+                <tr><td colSpan="19" style={{ textAlign: 'center', padding: '20px' }}>No se encontraron préstamos registrados.</td></tr>
               ) : (
                 casosActuales.map((caso, index) => {
-                  // Pequeña lógica para calcular los días de mora de forma segura
                   let diasMora = 0;
                   if (caso?.cicloDeVida?.fechas?.fechaDeCobro) {
                     const fechaCobro = new Date(caso.cicloDeVida.fechas.fechaDeCobro);
@@ -125,47 +135,105 @@ export default function StationMora() {
                     }
                   }
 
+                  const formatDate = (date) => date ? new Date(date).toLocaleDateString('es-MX') : 'N/A';
+                  const formatMoney = (centavos) => ((centavos || 0) / 100).toFixed(2);
+
                   return (
                     <tr key={caso._id || index}>
-                      <td>
+                      {/* Seleccionar */}
+                      <td style={{ textAlign: 'center' }}>
+                        <input type="checkbox" style={{ cursor: 'pointer' }} />
+                      </td>
+
+                      {/* Contactos */}
+                      <td style={{ textAlign: 'center' }}>
                         <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                          <MessageCircle size={16} color="#22c55e" style={{ cursor: 'pointer' }} />
-                          <Send size={16} color="#0ea5e9" style={{ cursor: 'pointer' }} />
+                          <MessageCircle size={16} color="#22c55e" style={{ cursor: 'pointer' }} title="Mensaje" />
+                          <Send size={16} color="#0ea5e9" style={{ cursor: 'pointer' }} title="Enviar" />
                         </div>
                       </td>
-                      
-                      {/* 1. Cliente */}
+
+                      {/* Número de Préstamo */}
+                      <td style={{ fontWeight: 600, color: '#3b82f6' }}>
+                        {caso?.numeroDePrestamo || 'N/A'}
+                      </td>
+
+                      {/* ID Subfactura */}
+                      <td className="texto-mutado">
+                        {caso?.idDeSubFactura || 'N/A'}
+                      </td>
+
+                      {/* Estado Crédito */}
+                      <td style={{ color: caso?.cicloDeVida?.estadoDeCredito === 'En Mora' ? '#ef4444' : '#22c55e', fontWeight: 600 }}>
+                        {caso?.cicloDeVida?.estadoDeCredito || 'N/A'}
+                      </td>
+
+                      {/* Nombre Cliente */}
                       <td style={{ fontWeight: 500 }}>
                         {caso?.solicitud?.cliente?.nombreDelCliente || 'Desconocido'}
                       </td>
-                      
-                      {/* 2. Teléfono */}
+
+                      {/* Tel. Móvil */}
                       <td style={{ color: '#3b82f6', cursor: 'pointer' }}>
                         {caso?.solicitud?.cliente?.numeroDeTelefonoMovil || 'Sin teléfono'}
                       </td>
-                      
-                      {/* 3. Valor Adeudado (Convertimos de centavos a pesos) */}
-                      <td style={{ fontWeight: 700, color: '#ef4444' }}>
-                        ${((caso?.solicitud?.montos?.valorAdeudadoCentavos || 0) / 100).toFixed(2)}
+
+                      {/* Cliente Nuevo */}
+                      <td style={{ textAlign: 'center' }}>
+                        {caso?.solicitud?.cliente?.clienteNuevo ? '✅' : '❌'}
                       </td>
-                      
-                      {/* 4. Fecha Límite */}
+
+                      {/* Dispersado (MXN) */}
+                      <td style={{ fontWeight: 600, color: '#10b981', textAlign: 'right' }}>
+                        ${formatMoney(caso?.solicitud?.montos?.valorDispersadoCentavos)}
+                      </td>
+
+                      {/* Adeudado (MXN) */}
+                      <td style={{ fontWeight: 700, color: '#ef4444', textAlign: 'right' }}>
+                        ${formatMoney(caso?.solicitud?.montos?.valorAdeudadoCentavos)}
+                      </td>
+
+                      {/* Extensión (MXN) */}
+                      <td style={{ textAlign: 'right' }}>
+                        ${formatMoney(caso?.solicitud?.montos?.valorExtencionCentavos)}
+                      </td>
+
+                      {/* Reembolsado (MXN) */}
+                      <td style={{ fontWeight: 600, color: '#8b5cf6', textAlign: 'right' }}>
+                        ${formatMoney(caso?.cicloDeVida?.valorLiquidacionCentavos)}
+                      </td>
+
+                      {/* Producto */}
                       <td className="texto-mutado">
-                        {caso?.cicloDeVida?.fechas?.fechaDeCobro 
-                          ? new Date(caso.cicloDeVida.fechas.fechaDeCobro).toLocaleDateString() 
-                          : 'Sin fecha'}
+                        {caso?.solicitud?.producto?.nombreDelProducto || 'N/A'}
                       </td>
-                      
-                      {/* 5. Días Mora Calculados */}
-                      <td style={{ fontWeight: 800 }}>
+
+                      {/* Días Vencidos */}
+                      <td style={{ fontWeight: 800, textAlign: 'center', color: diasMora > 30 ? '#ef4444' : diasMora > 0 ? '#f59e0b' : '#22c55e' }}>
                         {diasMora}
                       </td>
-                      
-                      {/* 6. Estado del Crédito */}
-                      <td style={{ color: caso?.cicloDeVida?.estadoDeCredito === 'Mora' ? '#ef4444' : '#22c55e', fontWeight: 600, textTransform: 'capitalize' }}>
-                        {caso?.cicloDeVida?.estadoDeCredito || 'Desconocido'}
+
+                      {/* Fecha Dispersión */}
+                      <td className="texto-mutado">
+                        {formatDate(caso?.cicloDeVida?.fechas?.fechaDeDispersion)}
                       </td>
-                      
+
+                      {/* Fecha Cobro (D0) */}
+                      <td className="texto-mutado">
+                        {formatDate(caso?.cicloDeVida?.fechas?.fechaDeCobro)}
+                      </td>
+
+                      {/* Fecha Reembolso */}
+                      <td className="texto-mutado">
+                        {formatDate(caso?.cicloDeVida?.fechas?.fechaDeReembolso)}
+                      </td>
+
+                      {/* Clave Rastreo STP */}
+                      <td style={{ fontSize: '11px', fontFamily: 'monospace', color: '#6366f1' }}>
+                        {caso?.integraciones?.stp?.claveRastreoAbonoSTP || 'Pendiente'}
+                      </td>
+
+                      {/* Operar */}
                       <td>
                         <BotonesOperar caso={caso} />
                       </td>
