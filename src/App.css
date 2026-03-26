@@ -1,0 +1,21 @@
+/* ==========================================
+   src/App.css - LIMPIEZA DEL TEMPLATE DE VITE
+   Esto mata el margen blanco alrededor del Dashboard
+========================================== */
+
+#root {
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  text-align: left;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.App {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+}

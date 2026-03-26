@@ -1,0 +1,157 @@
+/* ==========================================
+   ESTILOS LOGIN - CRISTAL DELGADO Y SIN MÁRGENES
+========================================== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* 1. EL FONDO (FIJO PARA EVITAR BORDES BLANCOS) */
+.login-page-root {
+  position: fixed; /* Esto mata cualquier margen fantasma */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  background-image: url('/login-bg.png'); 
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin: 0;
+  padding: 0;
+}
+
+/* 2. CAPA OSCURA DE CONTRASTE */
+.login-overlay {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 0, 0, 0.4); 
+  z-index: 1;
+}
+
+/* 3. CONTENEDOR ALINEADO A LA DERECHA */
+.right-aligned-login-area {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: flex-end; /* Lo pega a la derecha */
+  align-items: center;       /* Lo centra en altura */
+  padding-right: 8%;         /* Separación del borde derecho de la pantalla */
+}
+
+/* 4. LA TARJETA DE CRISTAL (Pequeña y elegante) */
+.slim-glass-login-card {
+  width: 100%;
+  max-width: 380px; /* Tamaño muy compacto */
+  background: rgba(15, 23, 42, 0.55); /* Azul marino muy translúcido */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.15); /* Borde de cristal sutil */
+  padding: 35px 30px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- TEXTOS E ICONOS --- */
+.logo-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.logo-icon { color: #00ff9d; }
+.logo-text { color: #00ff9d; font-weight: 800; font-size: 15px; letter-spacing: 0.5px; }
+
+.welcome-header {
+  color: #ffffff;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 10px 0;
+}
+
+.subtitle {
+  color: #cbd5e1;
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.5;
+  margin-bottom: 25px;
+}
+
+/* --- FORMULARIO --- */
+.login-form { display: flex; flex-direction: column; gap: 15px; }
+.input-group { display: flex; flex-direction: column; gap: 5px; }
+.input-group label { color: #cbd5e1; font-size: 11px; font-weight: 600; margin-left: 2px; }
+
+.input-group input {
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.25); 
+  border: 1px solid rgba(255, 255, 255, 0.1); 
+  border-radius: 8px;
+  padding: 12px 14px; 
+  color: #ffffff;
+  font-size: 13px;
+  transition: all 0.3s ease;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.input-group input::placeholder { color: #8fa1c4; opacity: 0.7; }
+.input-group input:focus {
+  background-color: rgba(0, 0, 0, 0.4);
+  border-color: #00ff9d;
+  box-shadow: 0 0 0 1px #00ff9d;
+}
+
+/* --- BOTÓN SIGN IN --- */
+.submit-btn {
+  width: 100%;
+  background-color: #00ff9d;
+  color: #172647;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 5px;
+  box-shadow: 0 4px 14px rgba(0, 255, 157, 0.2);
+}
+
+.submit-btn:hover { background-color: #00e68d; transform: translateY(-1px); }
+.submit-btn:active { transform: translateY(0); }
+
+/* --- ENLACES EXTRAS --- */
+.form-links { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 15px;}
+.link-muted { color: #8fa1c4; font-size: 11px; text-decoration: none; transition: color 0.2s; }
+.link-muted:hover { color: #ffffff; text-decoration: underline; }
+.footer-links { display: flex; gap: 12px; }
+
+/* --- CAJA DE ERRORES --- */
+.error-box {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: center;
+  margin-top: 15px;
+  box-sizing: border-box;
+}
+
+.error-box.error {
+  background-color: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.error-box.success {
+  background-color: rgba(0, 255, 157, 0.15);
+  border: 1px solid rgba(0, 255, 157, 0.3);
+  color: #00ff9d;
+}

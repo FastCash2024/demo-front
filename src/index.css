@@ -1,0 +1,245 @@
+/* ==========================================
+   TABLA ESTÉTICA 100% ADAPTABLE AL TEMA (LIGHT/DARK)
+========================================== */
+.tabla-dark-excel {
+  width: 100%;
+  border-collapse: separate; /* Cambiado a 'separate' para que la cabecera fija no se rompa */
+  border-spacing: 0;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-main); 
+  background-color: var(--bg-card); 
+}
+
+/* Cabeceras adaptadas y FIJAS ARRIBA (Sticky Top) */
+.tabla-dark-excel th {
+  background-color: var(--bg-card); 
+  color: var(--text-main); 
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 800; 
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border-color); 
+  border-right: 1px solid var(--border-color);
+  position: sticky; 
+  top: 0;
+  z-index: 10;
+}
+
+/* Para que la esquina superior derecha (Cabecera "Operar") flote por encima de todo */
+.tabla-dark-excel th:last-child {
+  z-index: 11;
+  border-right: none;
+}
+
+/* Celdas del cuerpo */
+.tabla-dark-excel td {
+  padding: 10px 12px;
+  background-color: transparent; 
+  border-bottom: 1px solid var(--border-color); 
+  border-right: 1px solid var(--border-color);
+  transition: all 0.2s ease;
+}
+
+/* Efecto Cebra: Gris neutro que funciona en ambos temas */
+.tabla-dark-excel tbody tr:nth-child(even) td {
+  background-color: rgba(128, 128, 128, 0.05); 
+}
+
+/* Efecto Hover: Verde luminoso */
+.tabla-dark-excel tbody tr:hover td {
+  background-color: rgba(0, 255, 157, 0.1); 
+}
+
+.tabla-dark-excel .texto-mutado {
+  color: var(--text-muted) !important;
+}
+
+/* ==========================================
+   COLUMNA "OPERAR" FIJA A LA DERECHA (STICKY)
+========================================== */
+.tabla-dark-excel td:last-child {
+  border-right: none;
+  position: sticky; 
+  right: 0;
+  box-shadow: -4px 0 8px rgba(0, 0, 0, 0.05); 
+  background-color: var(--bg-card); 
+  z-index: 2;
+}
+
+/* TRUCO NINJA: Efecto cebra en la columna fija sin transparentarse */
+.tabla-dark-excel tbody tr:nth-child(even) td:last-child {
+  background-color: var(--bg-card); 
+  box-shadow: inset 0 0 0 9999px rgba(128, 128, 128, 0.05), -4px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+/* TRUCO NINJA: Efecto Hover en la columna fija sin transparentarse */
+.tabla-dark-excel tbody tr:hover td:last-child {
+  background-color: var(--bg-card); 
+  box-shadow: inset 0 0 0 9999px rgba(0, 255, 157, 0.1), -4px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+/* ==========================================
+   SCROLLBAR PERSONALIZADO Y CONTENEDOR FLUIDO
+========================================== */
+.table-scroll-wrapper {
+  overflow: auto; 
+  flex: 1;
+  min-height: 0; /* Vital para que el contenedor no rompa la pantalla */
+}
+
+/* El tamaño de la barra (muy delgadita) */
+.table-scroll-wrapper::-webkit-scrollbar {
+  height: 8px; 
+  width: 8px; 
+}
+
+/* El fondo por donde corre la barra */
+.table-scroll-wrapper::-webkit-scrollbar-track {
+  background: var(--bg-card);
+  border-bottom-left-radius: 8px;
+}
+
+/* La barra que arrastras */
+.table-scroll-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(143, 161, 196, 0.3); 
+  border-radius: 4px;
+}
+
+.table-scroll-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6; 
+}
+
+/* ==========================================
+   MODALES (VENTANAS FLOTANTES DE REGISTRO)
+========================================== */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Fondo oscuro semitransparente */
+  backdrop-filter: blur(4px); /* Efecto cristalino moderno */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* Asegura que salga por encima de TODO */
+}
+
+.modal-content {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  width: 450px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  animation: modalEntrada 0.3s ease-out;
+}
+
+@keyframes modalEntrada {
+  from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 15px;
+  color: var(--text-main); /* Adaptable al tema */
+}
+
+.btn-cerrar {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-cerrar:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Estilos para los campos del formulario dentro del modal */
+.campo-formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  text-align: left;
+}
+
+.campo-formulario label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.campo-formulario input,
+.campo-formulario select,
+.campo-formulario textarea {
+  padding: 10px;
+  background-color: rgba(128, 128, 128, 0.08); /* Adaptable al tema */
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+
+.campo-formulario input:focus,
+.campo-formulario select:focus,
+.campo-formulario textarea:focus {
+  border-color: #3b82f6;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  background-color: rgba(128, 128, 128, 0.05); /* Adaptable al tema */
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+/* ==========================================
+   SELECT DEL PAGINADOR
+========================================== */
+.select-paginador {
+  background: rgba(128, 128, 128, 0.08);
+  border: 1px solid var(--border-color);
+  color: var(--text-main);
+  padding: 4px 8px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+/* Forzamos el fondo oscuro en las opciones desplegadas */
+.select-paginador option {
+  background-color: var(--bg-card);
+  color: var(--text-main);
+}
