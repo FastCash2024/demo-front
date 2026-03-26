@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { 
   Smartphone, User, Camera, CheckCircle, MapPin, 
   Briefcase, GraduationCap, ShieldCheck, Map, 
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 
 export default function PerfilCliente() {
+  const { id } = useParams();
   const [caso, setCaso] = useState(null);
   const [pestañaActiva, setPestañaActiva] = useState('informacion');
   
@@ -26,8 +28,42 @@ export default function PerfilCliente() {
   };
 
   useEffect(() => {
-    const datosGuardados = localStorage.getItem('clienteEnDetalle');
-    if (datosGuardados) setCaso(JSON.parse(datosGuardados));
+    const cargarDatos = async () => {
+      try {
+        const datosGuardados = localStorage.getItem('clienteEnDetalle');
+        if (datosGuardados) {
+          setCaso(JSON.parse(datosGuardados));
+          return;
+        }
+
+        // Si no hay cliente en localStorage, usar id en route param o query string
+        let loanId = id || null;
+        if (!loanId) {
+          const params = new URLSearchParams(window.location.search);
+          loanId = params.get('id');
+        }
+
+        if (!loanId) {
+          setCaso({ error: 'No se encontró cliente en localStorage ni id en la URL. Abre perfil desde la tabla de préstamos.' });
+          return;
+        }
+
+        // Reemplaza la URL del backend si es diferente en producción
+        const response = await fetch(`http://localhost:3000/api/loans/${loanId}`, {
+          headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+        const data = await response.json();
+        setCaso(data);
+      } catch (error) {
+        console.error('Error cargando cliente en PerfilCliente:', error);
+        setCaso({ error: error.message || 'Error inesperado al cargar perfil' });
+      }
+    };
+
+    cargarDatos();
   }, []);
 
   // TEMA INDEPENDIENTE
@@ -115,6 +151,18 @@ export default function PerfilCliente() {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: theme.bgMain, color: theme.textMain, margin: 0 }}>
         <h2>Cargando Comando Central...</h2>
+      </div>
+    );
+  }
+
+  if (caso.error) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', backgroundColor: theme.bgMain, color: theme.textMain, margin: 0, padding: '24px', textAlign: 'center' }}>
+        <div style={{ maxWidth: '600px' }}>
+          <h2>Hubo un problema al cargar el perfil</h2>
+          <p style={{ color: theme.textMuted, margin: '12px 0' }}>{caso.error}</p>
+          <p style={{ color: theme.textMuted, fontSize: '14px' }}>Asegúrate de ir desde la tabla con la selección correcta o añade `?id=<loanId>` a la URL.</p>
+        </div>
       </div>
     );
   }

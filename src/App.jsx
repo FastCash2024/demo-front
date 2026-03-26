@@ -18,6 +18,7 @@ function App() {
 
         {/* 👇 2. Registramos la nueva ruta para que funcione al abrir la pestaña nueva */}
         <Route path="/perfil-cliente" element={<PerfilCliente />} />
+        <Route path="/perfil-cliente/:id" element={<PerfilCliente />} />
       </Routes>
     </BrowserRouter>
   );
